@@ -93,17 +93,17 @@ export class UserConfigReport {
 }
 
 /**
- * Move loader query config tweaks into a query object, allowing users to
+ * Move loader options config into an options object, allowing users to
  * provide a flat config.
  */
-export function prepareWebpackLoaderConfig(loaders) {
-  Object.keys(loaders).forEach(loaderId => {
-    let loader = loaders[loaderId]
-    if (loader.query) return loader
-    let {config, exclude, include, test, ...query} = loader // eslint-disable-line no-unused-vars
-    if (Object.keys(query).length > 0) {
-      loader.query = query
-      Object.keys(query).forEach(prop => delete loader[prop])
+export function prepareWebpackRuleConfig(rules) {
+  Object.keys(rules).forEach(ruleId => {
+    let rule = rules[ruleId]
+    if (rule.options) return
+    let {exclude, include, test, ...options} = rule // eslint-disable-line no-unused-vars
+    if (Object.keys(options).length > 0) {
+      rule.options = options
+      Object.keys(options).forEach(prop => delete rule[prop])
     }
   })
 }
@@ -368,8 +368,17 @@ export function processUserConfig({
     )
   }
 
+  // TODO Remove in a future version
   if (userConfig.webpack.loaders) {
-    prepareWebpackLoaderConfig(userConfig.webpack.loaders)
+    report.deprecated('webpack.loaders',
+      `Deprecated in favour of ${chalk.green('webpack.rules')} config as of nwb v0.14.`
+    )
+    userConfig.webpack.rules = userConfig.webpack.loaders
+    delete userConfig.webpack.loaders
+  }
+
+  if (userConfig.webpack.rules) {
+    prepareWebpackRuleConfig(userConfig.webpack.rules)
   }
 
   if (typeOf(userConfig.webpack.postcss) === 'array') {
